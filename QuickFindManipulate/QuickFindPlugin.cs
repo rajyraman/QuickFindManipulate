@@ -1,4 +1,5 @@
-﻿using Microsoft.Xrm.Sdk;
+﻿using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
 using System;
@@ -19,7 +20,16 @@ namespace RYR.QuickFindManipulate
             {
                 if (!context.InputParameters.Contains("Query")) return;
 
-                var query = (QueryExpression)context.InputParameters["Query"];
+                var query = context.InputParameters["Query"] as QueryExpression;
+                if (query == null)
+                {
+                    var fetchXml = context.InputParameters["Query"] as FetchExpression;
+
+                    query = ((FetchXmlToQueryExpressionResponse)service.Execute(new FetchXmlToQueryExpressionRequest { FetchXml = fetchXml.Query })).Query;
+
+                    context.InputParameters["Query"] = query;
+                }
+
                 var likeValue = string.Empty;
                 var likeAttribute = string.Empty;
                 var primaryKeyFilter = new FilterExpression(LogicalOperator.Or);
