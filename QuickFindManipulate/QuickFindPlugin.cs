@@ -74,8 +74,7 @@ namespace RYR.QuickFindManipulate
                 }
                 if (likeValue != string.Empty)
                 {
-                    //HACK: This will not work for activities. Need to check from metadata.
-                    primaryKeyFilter.AddCondition($"{query.EntityName}id", ConditionOperator.Equal, likeValue);
+                    primaryKeyFilter.AddCondition(RetrievePrimaryKeyAttributeName(service, query.EntityName), ConditionOperator.Equal, likeValue);
                     query.Criteria.AddFilter(primaryKeyFilter);
                 }
             }
@@ -109,6 +108,15 @@ namespace RYR.QuickFindManipulate
                 attributeMetadata.AttributeMetadata.AttributeType.Value == Microsoft.Xrm.Sdk.Metadata.AttributeTypeCode.Uniqueidentifier;
 
             return new Tuple<bool, string>(isValidForGuid, attributeMetadata.AttributeMetadata.LogicalName);
+        }
+
+        private string RetrievePrimaryKeyAttributeName(IOrganizationService service, string entityName)
+        {
+            var entityMetadata = (RetrieveEntityResponse)service.Execute(
+                new RetrieveEntityRequest {
+                    LogicalName = entityName,
+                    EntityFilters = Microsoft.Xrm.Sdk.Metadata.EntityFilters.Entity });
+            return entityMetadata.EntityMetadata.PrimaryIdAttribute;
         }
     }
 }
